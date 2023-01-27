@@ -131,11 +131,11 @@ exit:
 // assume topic filter and name is in correct format
 // # can only be at end
 // + and # can only be next to separator
-static char isTopicMatched(char* topicFilter, MQTTString* topicName)
+static char isTopicMatched(const char* topicFilter, MQTTString* topicName)
 {
-    char* curf = topicFilter;
-    char* curn = topicName->lenstring.data;
-    char* curn_end = curn + topicName->lenstring.len;
+    const char* curf = topicFilter;
+    const char* curn = topicName->lenstring.data;
+    const char* curn_end = curn + topicName->lenstring.len;
 
     while (*curf && curn < curn_end)
     {
@@ -145,7 +145,7 @@ static char isTopicMatched(char* topicFilter, MQTTString* topicName)
             break;
         if (*curf == '+')
         {   // skip until we meet the next separator, or end of string
-            char* nextpos = curn + 1;
+            const char* nextpos = curn + 1;
             while (nextpos < curn_end && *nextpos != '/')
                 nextpos = ++curn + 1;
         }
@@ -167,8 +167,8 @@ int deliverMessage(MQTTClient* c, MQTTString* topicName, MQTTMessage* message)
     // we have to find the right message handler - indexed by topic
     for (i = 0; i < MAX_MESSAGE_HANDLERS; ++i)
     {
-        if (c->messageHandlers[i].topicFilter != 0 && (MQTTPacket_equals(topicName, (char*)c->messageHandlers[i].topicFilter) ||
-                isTopicMatched((char*)c->messageHandlers[i].topicFilter, topicName)))
+        if (c->messageHandlers[i].topicFilter != 0 && (MQTTPacket_equals(topicName, c->messageHandlers[i].topicFilter) ||
+                isTopicMatched(c->messageHandlers[i].topicFilter, topicName)))
         {
             if (c->messageHandlers[i].fp != NULL)
             {
@@ -405,7 +405,7 @@ int MQTTSubscribe(MQTTClient* c, const char* topicFilter, enum QoS qos, messageH
     Timer timer;
     int len = 0;
     MQTTString topic = MQTTString_initializer;
-    topic.cstring = (char *)topicFilter;
+    topic.cstring = topicFilter;
     // This was added because enum QoS was previously typed to *int which resulted in HardFault and unaligned integer read.
     // This coping below makes sure the parameter for MQTTSerialize_subscribe is always char no matter what compiler is using for enums
     char charQos = (char)qos;
@@ -462,7 +462,7 @@ int MQTTUnsubscribe(MQTTClient* c, const char* topicFilter)
     int rc = FAILURE;
     Timer timer;
     MQTTString topic = MQTTString_initializer;
-    topic.cstring = (char *)topicFilter;
+    topic.cstring = topicFilter;
     int len = 0;
 
 #if defined(MQTT_TASK)
@@ -501,7 +501,7 @@ int MQTTPublish(MQTTClient* c, const char* topicName, MQTTMessage* message)
     int rc = FAILURE;
     Timer timer;
     MQTTString topic = MQTTString_initializer;
-    topic.cstring = (char *)topicName;
+    topic.cstring = topicName;
     int len = 0;
 
 #if defined(MQTT_TASK)
@@ -517,7 +517,7 @@ int MQTTPublish(MQTTClient* c, const char* topicName, MQTTMessage* message)
         message->id = getNextPacketId(c);
 
     len = MQTTSerialize_publish(c->buf, c->buf_size, 0, message->qos, message->retained, message->id,
-              topic, (unsigned char*)message->payload, message->payloadlen);
+              topic, message->payload, message->payloadlen);
     if (len <= 0)
         goto exit;
     if ((rc = sendPacket(c, len, &timer)) != SUCCESSS) // send the subscribe packet
