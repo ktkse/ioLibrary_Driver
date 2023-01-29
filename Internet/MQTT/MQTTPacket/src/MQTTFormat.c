@@ -66,7 +66,7 @@ int MQTTStringFormat_connack(char* strbuf, int strbuflen, unsigned char connack_
 
 
 int MQTTStringFormat_publish(char* strbuf, int strbuflen, unsigned char dup, int qos, unsigned char retained,
-		unsigned short packetid, MQTTString topicName, unsigned char* payload, int payloadlen)
+		unsigned short packetid, MQTTString topicName, const unsigned char* payload, int payloadlen)
 {
 	int strindex = snprintf(strbuf, strbuflen,
 				"PUBLISH dup %d, QoS %d, retained %d, packet id %d, topic %.*s, payload length %d, payload %.*s",
@@ -133,7 +133,8 @@ char* MQTTFormat_toClientString(char* strbuf, int strbuflen, unsigned char* buf,
 	break;
 	case PUBLISH:
 	{
-		unsigned char dup, retained, *payload;
+		unsigned char dup, retained;
+                const unsigned char *payload;
 		unsigned short packetid;
 		int qos, payloadlen;
 		MQTTString topicName = MQTTString_initializer;
@@ -201,7 +202,8 @@ char* MQTTFormat_toServerString(char* strbuf, int strbuflen, unsigned char* buf,
 	break;
 	case PUBLISH:
 	{
-		unsigned char dup, retained, *payload;
+		unsigned char dup, retained;
+                const unsigned char *payload;
 		unsigned short packetid;
 		int qos, payloadlen;
 		MQTTString topicName = MQTTString_initializer;
