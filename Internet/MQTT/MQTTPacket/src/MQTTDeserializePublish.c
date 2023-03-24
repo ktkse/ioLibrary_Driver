@@ -34,7 +34,7 @@
   * @return error code.  1 is success
   */
 int MQTTDeserialize_publish(unsigned char* dup, int* qos, unsigned char* retained, unsigned short* packetid, MQTTString* topicName,
-		unsigned char** payload, int* payloadlen, unsigned char* buf, int buflen)
+		const void** payload, int* payloadlen, unsigned char* buf, int buflen)
 {
 	MQTTHeader header = {0};
 	unsigned char* curdata = buf;
